@@ -1,0 +1,26 @@
+{
+  "name": "xiangqiai",
+  "version": "1.0.0",
+  "description": "XinangQi AI for DagazServer",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GlukKazan/XiangqiAI.git"
+  },
+  "author": "Valentin Chelnokov",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/GlukKazan/XiangqiAI/issues"
+  },
+  "homepage": "https://github.com/GlukKazan/XiangqiAI#readme",
+  "dependencies": {
+    "axios": "^0.21.1",
+    "underscore": "^1.12.0",
+    "winston": "^3.3.3",
+    "winston-daily-rotate-file": "^4.5.0"
+  }
+}
