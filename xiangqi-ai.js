@@ -3,17 +3,16 @@
 const WIDTH   = 9;
 const HEIGHT  = 10;
 
-const colorBlack   = 0x10;
 const colorWhite   = 0x08;
 
-const pieceEmpty   = 0x00;
-const piecePawn    = 0x01;
-const pieceKnight  = 0x02;
-const pieceBishop  = 0x03;
-const pieceRook    = 0x04;
-const pieceCannon  = 0x05;
-const pieceGeneral = 0x06;
-const pieceKing    = 0x07;
+const pieceEmpty    = 0x00;
+const pieceSoldier  = 0x01;
+const pieceHorse    = 0x02;
+const pieceElephant = 0x03;
+const pieceChariot  = 0x04;
+const pieceCannon   = 0x05;
+const pieceAdvisor  = 0x06;
+const pieceGeneral  = 0x07;
 
 const g_timeout = 100;
 const g_board = new Array(WIDTH * HEIGHT);
@@ -39,7 +38,6 @@ var g_zobristLow;
 var g_zobristHigh;
 var g_zobristBlackLow;
 var g_zobristBlackHigh;
-var g_pieceCount = new Array(2 * 8);
 
 var materialTable = [0, 800, 3200, 1600, 7200, 3600, 1600, 600000];
 
@@ -291,22 +289,271 @@ var re = [
   0,  0,  0,  1,  1,  0,  0,  0,  0
 ];
 
-function flipTable(pos) {
-  if (g_toMove != colorWhite) {
+function flipTable(pos, color) {
+  if (color != colorWhite) {
       return 89 - pos;
   } else {
       return pos;
   }
 }
 
-function navigate(pos, dirs) {
-  const p = flipTable(pos);
-  var delta = dirs[p];
+function navigate(pos, dir, color) {
+  const p = flipTable(pos, color);
+  var delta = dir[p];
   if (delta == 0) {
       return null;
   }
   pos += delta;
-  return flipTable(pos);
+  return flipTable(pos, color);
+}
+
+function IsAttackableFromDirection(target, color, dir, sliders, opp) {
+    var p = navigate(target, dir, color);
+    if (p === null) return false;
+    var piece = g_board[p];
+    if ((piece != pieceEmpty) && ((piece & 8) != color)) {
+        const pieceType = piece & 7;
+        if (_.indexOf(sliders, pieceType) >= 0) return true;
+        if ((pieceType == pieceSoldier) && opp) {
+            if (navigate(p, opp, piece & 8) !== null) return true;
+        }
+        if (pieceType == pieceGeneral) return true;
+    }
+    while (piece == pieceEmpty) {
+        p = navigate(p, dir, color);
+        if (p === null) return false;
+        piece = g_board[p];
+    }
+    if (piece != pieceEmpty) {
+        const pieceType = piece & 7;
+        if ((_.indexOf(sliders, pieceType) >= 0) && ((piece & 8) != color)) return true;
+    }
+    p = navigate(p, dir, color);
+    while (p !== null) {
+        piece = g_board[p];
+        if ((piece & 8) == color) return false;
+        if ((piece & 7) == pieceCannon) return true;
+        p = navigate(p, dir, color);
+    }
+    return false;
+}
+
+function IsAttackableByElephant(target, color, dir, opp) {
+    var p = navigate(target, dir, color);
+    if (p === null) return false;
+    var piece = g_board[p];
+    if (piece != pieceEmpty) {
+        if (piece & 8 == color) return false;
+        if (piece & 7 == pieceAdvisor) {
+            return navigate(p, opp, piece & 8) !== null;
+        }
+        return false;
+    }
+    p = navigate(p, dir, color);
+    if (p === null) return false;
+    piece = g_board[p];
+    if (piece == pieceEmpty) return false;
+    if ((piece & 8) == color) return false;
+    if ((piece & 7) != pieceElephant) return false;
+    return navigate(p, opp, piece & 8) !== null;
+}
+
+function IsAttackableByKnight(target, color, d, o) {
+    var p = navigate(target, d, colorWhite);
+    if (p === null) return false;
+    var piece = g_board[p];
+    if (piece != pieceEmpty) return false;
+    p = navigate(p, o, colorWhite);
+    if (p === null) return false;
+    piece = g_board[p];
+    if (piece == pieceEmpty) return false;
+    if ((piece & 8) == color) return false;
+    return (piece & 7) == pieceHorse;
+}
+
+function IsKingAttackable(target) {
+    const color = g_board[from] & colorWhite;
+    if (IsAttackableFromDirection(target, color, cn, [pieceChariot, pieceGeneral], rn)) return true;
+    if (IsAttackableFromDirection(target, color, cs, [pieceChariot])) return true;
+    if (IsAttackableFromDirection(target, color, cw, [pieceChariot], rw)) return true;
+    if (IsAttackableFromDirection(target, color, ce, [pieceChariot], re)) return true;
+    if (IsAttackableByKnight(target, color, cnw, cn)) return true;
+    if (IsAttackableByKnight(target, color, cnw, cw)) return true;
+    if (IsAttackableByKnight(target, color, csw, cs)) return true;
+    if (IsAttackableByKnight(target, color, csw, cw)) return true;
+    if (IsAttackableByKnight(target, color, cne, cn)) return true;
+    if (IsAttackableByKnight(target, color, cne, ce)) return true;
+    if (IsAttackableByKnight(target, color, cse, cs)) return true;
+    if (IsAttackableByKnight(target, color, cse, ce)) return true;
+    if (g_darkOption) {
+        if (IsAttackableByElephant(target, color, cnw, cnw)) return true;
+        if (IsAttackableByElephant(target, color, cne, cne)) return true;
+        if (IsAttackableByElephant(target, color, csw, csw)) return true;
+        if (IsAttackableByElephant(target, color, cse, cse)) return true;
+    }
+    return false;
+}
+
+function IsSquareAttackable(target, color) {
+    if (IsAttackableFromDirection(target, color, cn, [pieceChariot], g_darkOption ? cn : rn)) return true;
+    if (IsAttackableFromDirection(target, color, cs, [pieceChariot])) return true;
+    if (IsAttackableFromDirection(target, color, cw, [pieceChariot], rw)) return true;
+    if (IsAttackableFromDirection(target, color, ce, [pieceChariot], re)) return true;
+    if (IsAttackableByKnight(target, color, cnw, cn)) return true;
+    if (IsAttackableByKnight(target, color, cnw, cw)) return true;
+    if (IsAttackableByKnight(target, color, csw, cs)) return true;
+    if (IsAttackableByKnight(target, color, csw, cw)) return true;
+    if (IsAttackableByKnight(target, color, cne, cn)) return true;
+    if (IsAttackableByKnight(target, color, cne, ce)) return true;
+    if (IsAttackableByKnight(target, color, cse, cs)) return true;
+    if (IsAttackableByKnight(target, color, cse, ce)) return true;
+    if (IsAttackableByElephant(target, color, cnw, g_darkOption ? cnw : rnw)) return true;
+    if (IsAttackableByElephant(target, color, cne, g_darkOption ? cne : rne)) return true;
+    if (IsAttackableByElephant(target, color, csw, g_darkOption ? csw : rsw)) return true;
+    if (IsAttackableByElephant(target, color, cse, g_darkOption ? cse : rse)) return true;
+    return false;
+}
+
+function IsSoldierAttackedFrom(from, color, dir, callback) {
+    var p = navigate(from, dir, color);
+    if (p === null) return false;
+    return callback(from, p, true);
+}
+
+function IsLeaperAttackedFrom(from, color, o, d, callback) {
+    var p = navigate(from, o, color);
+    if (p === null) return false;
+    if (g_board[p] != pieceEmpty) return false;
+    p = navigate(p, d, color);
+    if (p === null) return false;
+    return callback(from, p, true);
+}
+
+function IsRiderAttackedFrom(from, dir, callback) {
+    var p = navigate(from, dir, colorWhite);
+    while (p !== null) {
+        if (callback(from, p, false)) return true;
+        if (g_board[p] != pieceEmpty) return false;
+        p = navigate(p, dir, colorWhite);
+    }
+    return false;
+}
+
+function IsCannonAttackedFrom(from, dir, callback) {
+    var p = navigate(from, dir, colorWhite);
+    while (p !== null) {
+        if (callback(from, p, false)) return false;
+        if (g_board[p] != pieceEmpty) break;
+        p = navigate(p, dir, colorWhite);
+    }
+    p = navigate(p, dir, colorWhite);
+    while (p !== null) {
+        if (callback(from, p, true)) return true;
+        if (g_board[p] != pieceEmpty) return false;
+        p = navigate(p, dir, colorWhite);
+    }
+    return false;
+}
+function IsSquareAttackableFrom(from, callback) {
+    const piece = g_board[from];
+    if (piece == pieceEmpty) return false;
+    const color = piece & 8;
+    const pieceType = piece & 7;
+    if (pieceType == pieceSoldier) {
+        if (IsSoldierAttackedFrom(from, color, g_darkOption ? cn : rn, callback)) return true;
+        if (IsSoldierAttackedFrom(from, color, re, callback)) return true;
+        if (IsSoldierAttackedFrom(from, color, rw, callback)) return true;
+    }
+    if (pieceType == pieceAdvisor) {
+        if (IsSoldierAttackedFrom(from, color, rne, callback)) return true;
+        if (IsSoldierAttackedFrom(from, color, rnw, callback)) return true;
+        if (IsSoldierAttackedFrom(from, color, rse, callback)) return true;
+        if (IsSoldierAttackedFrom(from, color, rsw, callback)) return true;
+    }
+    if (pieceType == pieceHorse) {
+        if (IsLeaperAttackedFrom(from, color, cn, cne, callback)) return true;
+        if (IsLeaperAttackedFrom(from, color, cn, cnw, callback)) return true;
+        if (IsLeaperAttackedFrom(from, color, cs, cse, callback)) return true;
+        if (IsLeaperAttackedFrom(from, color, cs, csw, callback)) return true;
+        if (IsLeaperAttackedFrom(from, color, cw, cnw, callback)) return true;
+        if (IsLeaperAttackedFrom(from, color, cw, csw, callback)) return true;
+        if (IsLeaperAttackedFrom(from, color, ce, cne, callback)) return true;
+        if (IsLeaperAttackedFrom(from, color, ce, cse, callback)) return true;
+    }
+    if (pieceType == pieceElephant) {
+        if (IsLeaperAttackedFrom(from, color, g_darkOption ? cnw : rnw, g_darkOption ? cnw : rnw, callback)) return true;
+        if (IsLeaperAttackedFrom(from, color, g_darkOption ? cne : rne, g_darkOption ? cne : rne, callback)) return true;
+        if (IsLeaperAttackedFrom(from, color, g_darkOption ? csw : rsw, g_darkOption ? csw : rsw, callback)) return true;
+        if (IsLeaperAttackedFrom(from, color, g_darkOption ? cse : rse, g_darkOption ? cse : rse, callback)) return true;
+    }
+    if (pieceType == pieceChariot) {
+        if (IsRiderAttackedFrom(from, cn, callback)) return true;
+        if (IsRiderAttackedFrom(from, cs, callback)) return true;
+        if (IsRiderAttackedFrom(from, ce, callback)) return true;
+        if (IsRiderAttackedFrom(from, cw, callback)) return true;
+    }
+    if (pieceType == pieceCannon) {
+        if (IsCannonAttackedFrom(from, cn, callback)) return true;
+        if (IsCannonAttackedFrom(from, cs, callback)) return true;
+        if (IsCannonAttackedFrom(from, ce, callback)) return true;
+        if (IsCannonAttackedFrom(from, cw, callback)) return true;
+    }
+    if (pieceType == pieceGeneral) {
+        if (IsSoldierAttackedFrom(from, color, rn, callback)) return true;
+        if (IsSoldierAttackedFrom(from, color, rs, callback)) return true;
+        if (IsSoldierAttackedFrom(from, color, re, callback)) return true;
+        if (IsSoldierAttackedFrom(from, color, rw, callback)) return true;
+    }
+    return false;
+}
+
+function GenerateAllMoves(moveStack) {
+    for (var pos = 0; pos < 90; pos++) {
+        var piece = g_board[pos];
+        if ((piece != pieceEmpty) && ((piece & 8) == g_toMove)) {
+            IsSquareAttackableFrom(pos, (from, to, flag) => {
+                moveStack.push(GenerateMove(from, to));
+                return flag;
+            });
+        }
+    }
+}
+
+function GenerateCaptureMoves(moveStack) {
+    for (var pos = 0; pos < 90; pos++) {
+        var piece = g_board[pos];
+        if ((piece != pieceEmpty) && ((piece & 8) == g_toMove)) {
+            IsSquareAttackableFrom(pos, (from, to, flag) => {
+                if (g_board[to] != pieceEmpty) {
+                    moveStack.push(GenerateMove(from, to));
+                }
+                return flag;
+            });
+        }
+    }
+}
+
+var g_pieceIndex = new Array(90);
+var g_pieceList  = new Array(2 * 8 * 16);
+var g_pieceCount = new Array(2 * 8);
+
+function InitializePieceList() {
+    for (var i = 0; i < 16; i++) {
+        g_pieceCount[i] = 0;
+        for (var j = 0; j < 16; j++) {
+            // 0 is used as the terminator for piece lists
+            g_pieceList[(i << 4) | j] = 0;
+        }
+    }
+    for (var i = 0; i < 90; i++) {
+        g_pieceIndex[i] = 0;
+        var piece = g_board[i] & 0xF;
+        if (piece != pieceEmpty) {
+			g_pieceList[(piece << 4) | g_pieceCount[piece]] = i;
+			g_pieceIndex[i] = g_pieceCount[piece];
+			g_pieceCount[piece]++;
+        }
+    }
 }
 
 function UndoHistory(inCheck, baseEval, hashKeyLow, hashKeyHigh, move50, captured) {
@@ -335,6 +582,18 @@ function UnmakeMove(move) {
 
     g_board[from] = g_board[to];
     g_board[to] = captured;
+
+	// Move our piece in the piece list
+    g_pieceIndex[from] = g_pieceIndex[to];
+    g_pieceList[((piece & 0xF) << 4) | g_pieceIndex[from]] = from;
+
+    if (captured) {
+		// Restore our piece to the piece list
+        var captureType = captured & 0xF;
+        g_pieceIndex[epcEnd] = g_pieceCount[captureType];
+        g_pieceList[(captureType << 4) | g_pieceCount[captureType]] = epcEnd;
+        g_pieceCount[captureType]++;
+    }
 }
 
 function MakeMove(move) {
@@ -350,6 +609,10 @@ function MakeMove(move) {
     if (captured) {
         const capturedType = captured & 0xF;
         g_pieceCount[capturedType]--;
+        var lastPieceSquare = g_pieceList[(capturedType << 4) | g_pieceCount[capturedType]];
+        g_pieceIndex[lastPieceSquare] = g_pieceIndex[to];
+        g_pieceList[(capturedType << 4) | g_pieceIndex[lastPieceSquare]] = lastPieceSquare;
+        g_pieceList[(capturedType << 4) | g_pieceCount[capturedType]] = 0;
         g_baseEval += materialTable[captured & 0x7];
 //      g_baseEval += pieceSquareAdj[captured & 0x7][me ? flipTable[epcEnd] : epcEnd];
         g_hashKeyLow ^= g_zobristLow[to][capturedType];
@@ -366,6 +629,10 @@ function MakeMove(move) {
 
 //  g_baseEval -= pieceSquareAdj[piece & 0x7][me == 0 ? flipTable[from] : from];
 
+    // Move our piece in the piece list
+    g_pieceIndex[to] = g_pieceIndex[from];
+    g_pieceList[((piece & 0xF) << 4) | g_pieceIndex[to]] = to;
+
     g_board[to] = g_board[from];
 //  g_baseEval += pieceSquareAdj[piece & 0x7][me == 0 ? flipTable[to] : to];
     g_board[from] = pieceEmpty;
@@ -373,45 +640,16 @@ function MakeMove(move) {
     g_toMove = otherColor;
     g_baseEval = -g_baseEval;
 
-    if ((piece & 0x7) == pieceKing || g_inCheck) {
-//      if (IsSquareAttackable(g_pieceList[(pieceKing | (8 - g_toMove)) << 4], otherColor)) {
-//          UnmakeMove(move);
-//          return false;
-//      }
-    } else {
-//      const kingPos = g_pieceList[(pieceKing | (8 - g_toMove)) << 4];
-//      if (ExposesCheck(from, kingPos)) {
-//          UnmakeMove(move);
-//          return false;
-//      }
+    if (IsKingAttackable(g_pieceList[(pieceGeneral | (8 - g_toMove)) << 4])) {
+        UnmakeMove(move);
+        return false;
     }
-
-    g_inCheck = false;
-/*  if (flags <= moveflagEPC) {
-        var theirKingPos = g_pieceList[(pieceKing | g_toMove) << 4];
-        // First check if the piece we moved can attack the enemy king
-        g_inCheck = IsSquareAttackableFrom(theirKingPos, to);
-        if (!g_inCheck) {
-            // Now check if the square we moved from exposes check on the enemy king
-            g_inCheck = ExposesCheck(from, theirKingPos);
-            if (!g_inCheck) {
-                // Finally, ep. capture can cause another square to be exposed
-                if (epcEnd != to) {
-                    g_inCheck = ExposesCheck(epcEnd, theirKingPos);
-                }
-            }
-        }
-    }
-    else {
-        // Castle or promotion, slow check
-        g_inCheck = IsSquareAttackable(g_pieceList[(pieceKing | g_toMove) << 4], 8 - g_toMove);
-    }*/
-
+    g_inCheck = IsKingAttackable(g_pieceList[(pieceGeneral | g_toMove) << 4]);
+    
     g_repMoveStack[g_moveCount - 1] = g_hashKeyLow;
     g_move50++;
 
     return true;
-
 }
 
 var g_seeValues = [0, 1, 3, 2, 5, 4, 2, 900,
@@ -443,13 +681,13 @@ function See(move) {
     // it's not worth it.  We can capture on this square again, and the opponent doesn't have to capture back. 
     var captureDeficit = fromValue - toValue;
     SeeAddKnightAttacks(to, them, themAttacks);
-    if (themAttacks.length != 0 && captureDeficit > g_seeValues[pieceKnight]) {
+    if (themAttacks.length != 0 && captureDeficit > g_seeValues[pieceHorse]) {
         return false;
     }
 
     // Rook attacks
     g_board[from] = 0;
-    const pieceType = pieceRook;
+    const pieceType = pieceChariot;
     if (SeeAddSliderAttacks(to, them, themAttacks, pieceType)) {
         if (captureDeficit > g_seeValues[pieceType]) {
             g_board[from] = fromPiece;
@@ -465,12 +703,12 @@ function See(move) {
     // a pawn, it's got to be a winning or equal capture. 
 
     // King attacks
-    SeeAddSliderAttacks(to, them, themAttacks, pieceKing);
+    SeeAddSliderAttacks(to, them, themAttacks, pieceGeneral);
 
     // Our attacks
     var usAttacks = new Array();
     SeeAddKnightAttacks(to, us, usAttacks);
-    for (var pieceType = pieceBishop; pieceType <= pieceKing; pieceType++) {
+    for (var pieceType = pieceElephant; pieceType <= pieceGeneral; pieceType++) {
         SeeAddSliderAttacks(to, us, usAttacks, pieceType);
     }
 
@@ -640,13 +878,12 @@ function QSearch(alpha, beta, ply) {
     var wasInCheck = g_inCheck;
 
     if (wasInCheck) {
-        GenerateCaptureMoves(moves, null);
         GenerateAllMoves(moves);
         for (var i = 0; i < moves.length; i++) {
             moveScores[i] = ScoreMove(moves[i]);
         }
     } else {
-        GenerateCaptureMoves(moves, null);
+        GenerateCaptureMoves(moves);
         for (var i = 0; i < moves.length; i++) {
             var captured = g_board[(moves[i] >> 8) & 0xFF] & 0x7;
             var pieceType = g_board[moves[i] & 0xFF] & 0x7;
@@ -715,7 +952,7 @@ function IsHashMoveValid(hashMove) {
     var to = (hashMove >> 8) & 0xFF;
     var ourPiece = g_board[from];
     var pieceType = ourPiece & 0x7;
-    if (pieceType < piecePawn) return false;
+    if (pieceType < pieceSoldier) return false;
     // Can't move a piece we don't control
     if (g_toMove != (ourPiece & 0x8))
         return false;
@@ -724,7 +961,9 @@ function IsHashMoveValid(hashMove) {
         return false;
     // This validates that this piece type can actually make the attack
     if (hashMove >> 16) return false;
-    return IsSquareAttackableFrom(to, from);
+    return IsSquareAttackableFrom(from, (start, stop) => {
+        return stop == to;
+    });
 }
 
 function IsRepDraw() {
@@ -765,7 +1004,7 @@ function MovePicker(hashMove, depth, killer1, killer2) {
             }
 
             if (this.stage == 2) {
-                GenerateCaptureMoves(this.moves, null);
+                GenerateCaptureMoves(this.moves);
                 this.moveCount = this.moves.length;
                 this.moveScores = new Array(this.moveCount);
                 // Move ordering
@@ -929,10 +1168,10 @@ function AllCutNode(ply, depth, beta, allowNull) {
         if (ply > 1 &&
             g_baseEval >= beta - (ply >= 4 ? 2500 : 0) &&
             // Disable null move if potential zugzwang (no big pieces)
-            (g_pieceCount[pieceBishop | g_toMove] != 0 ||
-             g_pieceCount[pieceKnight | g_toMove] != 0 ||
-             g_pieceCount[pieceRook   | g_toMove] != 0 ||
-             g_pieceCount[pieceCannon | g_toMove] != 0)) {
+            (g_pieceCount[pieceElephant | g_toMove] != 0 ||
+             g_pieceCount[pieceHorse    | g_toMove] != 0 ||
+             g_pieceCount[pieceChariot  | g_toMove] != 0 ||
+             g_pieceCount[pieceCannon   | g_toMove] != 0)) {
             var r = 3 + (ply >= 5 ? 1 : ply / 4);
             if (g_baseEval - beta > 1500) r++;
 
@@ -1262,13 +1501,6 @@ function ResetGame() {
    }
    g_zobristBlackLow = mt.next(32);
    g_zobristBlackHigh = mt.next(32);
-
-   for (var row = 0; row < 8; row++) {
-       for (var col = 0; col < 8; col++) {
-           var square = MakeSquare(row, col);
-           flipTable[square] = MakeSquare(7 - row, col);
-       }
-   }
 }
 
 function SetHash() {
@@ -1287,6 +1519,31 @@ function SetHash() {
         result.hashKeyHigh ^= g_zobristBlackHigh;
     }
     return result;
+}
+
+function InitializeFromFen(fen) {
+    // TODO:
+
+    InitializePieceList();
+
+    var hashResult = SetHash();
+    g_hashKeyLow = hashResult.hashKeyLow;
+    g_hashKeyHigh = hashResult.hashKeyHigh;
+
+    g_baseEval = 0;
+    for (var i = 0; i < 256; i++) {
+        if (g_board[i] & colorWhite) {
+//          g_baseEval += pieceSquareAdj[g_board[i] & 0x7][i];
+            g_baseEval += materialTable[g_board[i] & 0x7];
+        } else if (g_board[i] & colorBlack) {
+//          g_baseEval -= pieceSquareAdj[g_board[i] & 0x7][flipTable[i]];
+            g_baseEval -= materialTable[g_board[i] & 0x7];
+        }
+    }
+    if (!g_toMove) g_baseEval = -g_baseEval;
+
+    g_move50 = 0;
+    g_inCheck = IsSquareAttackable(g_pieceList[(g_toMove | pieceKing) << 4], them);
 }
 
 function FindMove(fen, timeout, callback) {
