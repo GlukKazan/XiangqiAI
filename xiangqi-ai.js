@@ -533,6 +533,329 @@ function GenerateCaptureMoves(moveStack) {
     }
 }
 
+var pieceSquareAdj = [
+    [   0,   0,   0,   0,   0,   0,   0,   0,   0,    // pieceEmpty
+        0,   0,   0,   0,   0,   0,   0,   0,   0,
+        0,   0,   0,   0,   0,   0,   0,   0,   0,
+        0,   0,   0,   0,   0,   0,   0,   0,   0,
+        0,   0,   0,   0,   0,   0,   0,   0,   0,
+        0,   0,   0,   0,   0,   0,   0,   0,   0,
+        0,   0,   0,   0,   0,   0,   0,   0,   0,
+        0,   0,   0,   0,   0,   0,   0,   0,   0,
+        0,   0,   0,   0,   0,   0,   0,   0,   0,
+        0,   0,   0,   0,   0,   0,   0,   0,   0 ],
+
+    [   0,   0,  40,   0,   0,   0,  40,   0,   0,    // pieceSoldier
+        0,  10,  50,  40,  40,  40,  50,  10,   0,
+       10,  20,  30,  30,  30,  30,  30,  20,  10,
+        5,  10,  10,  20,  20,  20,  10,  10,   5,
+        5,   5,   5,  10,  10,  10,   5,   5,   5,
+        0,   0,   0,   0,   0,   0,   0,   0,   0,
+        5,   0,   5,   0,   5,   0,   5,   0,   5,
+        0,   0,   0,   0,   0,   0,   0,   0,   0,
+        0,   0,   0,   0,   0,   0,   0,   0,   0,
+        0,   0,   0,   0,   0,   0,   0,   0,   0 ],
+
+    [-200,-100, -50, -50, -50, -50, -50,-100,-200,    // pieceHorse
+     -100, -25, -10,   0,   0,   0, -10, -25,-100,
+      -50, -10,  10,  20,  20,  20,  10, -10, -50,
+      -50,   0,  40,  50,  50,  50,  40,   0, -50,
+      -50,   0,  15,  60,  60,  60,  15,   0, -50,
+      -50,   0,  15,  60,  60,  60,  15,   0, -50,
+      -50,   0,  10,  20,  20,  20,  10,   0, -50,
+      -50, -10,   0,   0,   0,   0,   0, -10, -50,
+     -100, -25, -10, -10, -10, -10, -10, -25,-100,
+     -200, -50, -25, -25, -25, -25, -25, -50,-200 ],
+
+    [   0,   0,   0,   0,   0,   0,   0,   0,   0,    // pieceElephant
+        0,   0,   0,   0,   0,   0,   0,   0,   0,
+        0,   0,   0,   0,   0,   0,   0,   0,   0,
+        0,   0,   0,   0,   0,   0,   0,   0,   0,
+        0,   0,   0,   0,   0,   0,   0,   0,   0,
+        0,   0,  20,   0,   0,   0,  20,   0,   0,
+        0,   0,   0,   0,   0,   0,   0,   0,   0,
+       10,   0,   0,   0,  50,   0,   0,   0,  10,
+        0,   0,   0,   0,   0,   0,   0,   0,   0,
+        0,   0,  30,   0,   0,   0,  30,   0,   0 ],
+
+    [ -10, -10, -60, -10, -10, -10, -60, -10, -10,    // pieceChariot
+       40,  70,  60,  10,  10,  10,  60,  70,  40,
+      -60,  20,  10,   0, -30,   0,  10,  20, -60,
+      -60,   0,   0,  30,  30,  30,   0,   0,   0,
+      -60,   0,   0,  30,  30,  30,   0,   0,   0,
+      -60,   0,   0,  30,  30,  30,   0,   0,   0,
+      -60,   0,   0,  30,  30,  30,   0,   0,   0,
+      -60,   0,   0,  10,  10,  10,   0,   0,   0,
+      -60,   0,   0,   0,   0,   0,   0,   0, -60,
+      -60,   0,   0, -10, -10, -10,   0,   0, -60 ],
+
+    [ -10, -10, -60, -10, -10, -10, -60, -10, -10,    // pieceCannon
+       40,  70,  60,  10,  10,  10,  60,  70,  40,
+      -60,  20,  10,   0, -30,   0,  10,  20, -60,
+      -60,   0,   0,  30,  30,  30,   0,   0,   0,
+      -60,   0,   0,  30,  30,  30,   0,   0,   0,
+      -60,   0,   0,  30,  30,  30,   0,   0,   0,
+      -60,   0,   0,  30,  30,  30,   0,   0,   0,
+      -60,   0,   0,  10,  10,  10,   0,   0,   0,
+      -60,   0,   0,   0,   0,   0,   0,   0, -60,
+      -60,   0,   0, -10, -10, -10,   0,   0, -60 ],
+ 
+    [   0,   0,   0,   0,   0,   0,   0,   0,   0,    // pieceAdvisor
+        0,   0,   0,   0,   0,   0,   0,   0,   0,
+        0,   0,   0,   0,   0,   0,   0,   0,   0,
+        0,   0,   0,   0,   0,   0,   0,   0,   0,
+        0,   0,   0,   0,   0,   0,   0,   0,   0,
+        0,   0,   0,   0,   0,   0,   0,   0,   0,
+        0,   0,   0,   0,   0,   0,   0,   0,   0,
+        0,   0,   0,  10,   0,  10,   0,   0,   0,
+        0,   0,   0,   0,  20,   0,   0,   0,   0,
+        0,   0,   0,  10,   0,  10,   0,   0,   0 ],
+
+    [   0,   0,   0,   0,   0,   0,   0,   0,   0,    // pieceGeneral
+        0,   0,   0,   0,   0,   0,   0,   0,   0,
+        0,   0,   0,   0,   0,   0,   0,   0,   0,
+        0,   0,   0,   0,   0,   0,   0,   0,   0,
+        0,   0,   0,   0,   0,   0,   0,   0,   0,
+        0,   0,   0,   0,   0,   0,   0,   0,   0,
+        0,   0,   0,   0,   0,   0,   0,   0,   0,
+        0,   0,   0,  10,  10,  10,   0,   0,   0,
+        0,   0,   0,  20,  30,  20,   0,   0,   0,
+        0,   0,   0,  10,  20,  10,   0,   0,   0 ]
+];
+
+var g_mobUnit;
+
+function InitializeEval() {
+    g_mobUnit = new Array(2);
+    for (var i = 0; i < 2; i++) {
+        g_mobUnit[i] = new Array();
+        var enemy = i == 0 ? 0x10 : 8;
+        var friend = i == 0 ? 8 : 0x10;
+        g_mobUnit[i][0] = 1;
+        g_mobUnit[i][0x80] = 0;
+        g_mobUnit[i][enemy  | pieceSoldier]  = 1;
+        g_mobUnit[i][enemy  | pieceElephant] = 2;
+        g_mobUnit[i][enemy  | pieceHorse]    = 2;
+        g_mobUnit[i][enemy  | pieceChariot]  = 4;
+        g_mobUnit[i][enemy  | pieceCannon]   = 4;
+        g_mobUnit[i][enemy  | pieceAdvisor]  = 4;
+        g_mobUnit[i][enemy  | pieceGeneral]  = 6;
+        g_mobUnit[i][friend | pieceSoldier]  = 0;
+        g_mobUnit[i][friend | pieceElephant] = 0;
+        g_mobUnit[i][friend | pieceHorse]    = 0;
+        g_mobUnit[i][friend | pieceChariot]  = 0;
+        g_mobUnit[i][friend | pieceCannon]   = 0;
+        g_mobUnit[i][friend | pieceAdvisor]  = 0;
+        g_mobUnit[i][friend | pieceGeneral]  = 0;
+    }
+}
+
+function Mobility(color) {
+    var result = 0;
+    var from, p, q, mob, pieceIdx;
+    var mobUnit = color == 8 ? g_mobUnit[0] : g_mobUnit[1];
+
+    // Horse mobility
+    mob = -3;
+    pieceIdx = (color | pieceHorse) << 4;
+    from = g_pieceList[pieceIdx++];
+    while (from != 0) {
+        p = navigate(from, cn, colorWhite);
+        if ((p !== null) && (g_board[p] == pieceEmpty)) {
+            q = navigate(p, cnw, colorWhite);
+            if (q !== null) mob += mobUnit[g_board[q]];
+            q = navigate(p, cne, colorWhite);
+            if (q !== null) mob += mobUnit[g_board[q]];
+        }
+        p = navigate(from, cs, colorWhite);
+        if ((p !== null) && (g_board[p] == pieceEmpty)) {
+            q = navigate(p, csw, colorWhite);
+            if (q !== null) mob += mobUnit[g_board[q]];
+            q = navigate(p, cse, colorWhite);
+            if (q !== null) mob += mobUnit[g_board[q]];
+        }
+        p = navigate(from, cw, colorWhite);
+        if ((p !== null) && (g_board[p] == pieceEmpty)) {
+            q = navigate(p, csw, colorWhite);
+            if (q !== null) mob += mobUnit[g_board[q]];
+            q = navigate(p, cnw, colorWhite);
+            if (q !== null) mob += mobUnit[g_board[q]];
+        }
+        p = navigate(from, ce, colorWhite);
+        if ((p !== null) && (g_board[p] == pieceEmpty)) {
+            q = navigate(p, cse, colorWhite);
+            if (q !== null) mob += mobUnit[g_board[q]];
+            q = navigate(p, cne, colorWhite);
+            if (q !== null) mob += mobUnit[g_board[q]];
+        }
+        from = g_pieceList[pieceIdx++];
+    }
+    result += 65 * mob;
+
+    // Elephant mobility
+    mob = -4;
+    pieceIdx = (color | pieceElephant) << 4;
+    from = g_pieceList[pieceIdx++];
+    while (from != 0) {
+        p = navigate(from, g_darkOption ? cnw : rnw, color);
+        if ((p !== null) && (g_board[p] == pieceEmpty)) {
+            q = navigate(p, g_darkOption ? cnw : rnw, color);
+            if (q !== null) mob += mobUnit[g_board[q]];
+        }
+        p = navigate(from, g_darkOption ? cne : rne, color);
+        if ((p !== null) && (g_board[p] == pieceEmpty)) {
+            q = navigate(p, g_darkOption ? cne : rne, color);
+            if (q !== null) mob += mobUnit[g_board[q]];
+        }
+        p = navigate(from, g_darkOption ? csw : rsw, color);
+        if ((p !== null) && (g_board[p] == pieceEmpty)) {
+            q = navigate(p, g_darkOption ? csw : rsw, color);
+            if (q !== null) mob += mobUnit[g_board[q]];
+        }
+        p = navigate(from, g_darkOption ? cse : rse, color);
+        if ((p !== null) && (g_board[p] == pieceEmpty)) {
+            q = navigate(p, g_darkOption ? cse : rse, color);
+            if (q !== null) mob += mobUnit[g_board[q]];
+        }
+        from = g_pieceList[pieceIdx++];
+    }
+    result += 44 * mob;
+
+    // Chariot mobility
+    mob = -4;
+    pieceIdx = (color | pieceChariot) << 4;
+    from = g_pieceList[pieceIdx++];
+    while (from != 0) {
+        p = navigate(from, cn, colorWhite);
+        while (p !== null) {
+            if (g_board[p] != pieceEmpty) {
+                if (g_board[p] & colorWhite != color) mob++;
+                break;
+            }
+            mob++;
+            p = navigate(p, cn, colorWhite);
+        }
+        p = navigate(from, cs, colorWhite);
+        while (p !== null) {
+            if (g_board[p] != pieceEmpty) {
+                if (g_board[p] & colorWhite != color) mob++;
+                break;
+            }
+            mob++;
+            p = navigate(p, cs, colorWhite);
+        }
+        p = navigate(from, cw, colorWhite);
+        while (p !== null) {
+            if (g_board[p] != pieceEmpty) {
+                if (g_board[p] & colorWhite != color) mob++;
+                break;
+            }
+            mob++;
+            p = navigate(p, cw, colorWhite);
+        }
+        p = navigate(from, ce, colorWhite);
+        while (p !== null) {
+            if (g_board[p] != pieceEmpty) {
+                if (g_board[p] & colorWhite != color) mob++;
+                break;
+            }
+            mob++;
+            p = navigate(p, ce, colorWhite);
+        }
+        from = g_pieceList[pieceIdx++];
+    }
+    result += 25 * mob;
+
+    // Cannon mobility
+    mob = -4;
+    pieceIdx = (color | pieceCannon) << 4;
+    from = g_pieceList[pieceIdx++];
+    while (from != 0) {
+        p = navigate(from, cn, colorWhite);
+        while (p !== null) {
+            if (g_board[p] != pieceEmpty) break;
+            mob++;
+            p = navigate(p, cn, colorWhite);
+        }
+        p = navigate(p, cn, colorWhite);
+        while (p !== null) {
+            if (g_board[p] != pieceEmpty) {
+                if (g_board[p] & colorWhite != color) mob++;
+                break;
+            }
+            p = navigate(p, cn, colorWhite);
+        }
+        p = navigate(from, cs, colorWhite);
+        while (p !== null) {
+            if (g_board[p] != pieceEmpty) break;
+            mob++;
+            p = navigate(p, cs, colorWhite);
+        }
+        p = navigate(p, cs, colorWhite);
+        while (p !== null) {
+            if (g_board[p] != pieceEmpty) {
+                if (g_board[p] & colorWhite != color) mob++;
+                break;
+            }
+            p = navigate(p, cs, colorWhite);
+        }
+        p = navigate(from, cw, colorWhite);
+        while (p !== null) {
+            if (g_board[p] != pieceEmpty) break;
+            mob++;
+            p = navigate(p, cw, colorWhite);
+        }
+        p = navigate(p, cw, colorWhite);
+        while (p !== null) {
+            if (g_board[p] != pieceEmpty) {
+                if (g_board[p] & colorWhite != color) mob++;
+                break;
+            }
+            p = navigate(p, cw, colorWhite);
+        }
+        p = navigate(from, ce, colorWhite);
+        while (p !== null) {
+            if (g_board[p] != pieceEmpty) break;
+            mob++;
+            p = navigate(p, ce, colorWhite);
+        }
+        p = navigate(p, ce, colorWhite);
+        while (p !== null) {
+            if (g_board[p] != pieceEmpty) {
+                if (g_board[p] & colorWhite != color) mob++;
+                break;
+            }
+            p = navigate(p, ce, colorWhite);
+        }
+        from = g_pieceList[pieceIdx++];
+    }
+    result += 25 * mob;
+
+    return result;
+}
+
+function Evaluate() {
+    var curEval = g_baseEval;
+    var evalAdjust = 0;
+    // Black bishop pair
+    if (g_pieceCount[pieceElephant] >= 2)
+        evalAdjust -= 500;
+    // White bishop pair
+    if (g_pieceCount[pieceElephant | colorWhite] >= 2)
+        evalAdjust += 500;
+    var mobility = Mobility(8) - Mobility(0);
+    if (g_toMove == 0) {
+        // Black
+        curEval -= mobility;
+        curEval -= evalAdjust;
+    }
+    else {
+        curEval += mobility;
+        curEval += evalAdjust;
+    }
+    return curEval;
+}
+
 var g_pieceIndex = new Array(90);
 var g_pieceList  = new Array(2 * 8 * 16);
 var g_pieceCount = new Array(2 * 8);
@@ -590,8 +913,8 @@ function UnmakeMove(move) {
     if (captured) {
 		// Restore our piece to the piece list
         var captureType = captured & 0xF;
-        g_pieceIndex[epcEnd] = g_pieceCount[captureType];
-        g_pieceList[(captureType << 4) | g_pieceCount[captureType]] = epcEnd;
+        g_pieceIndex[to] = g_pieceCount[captureType];
+        g_pieceList[(captureType << 4) | g_pieceCount[captureType]] = to;
         g_pieceCount[captureType]++;
     }
 }
@@ -614,7 +937,7 @@ function MakeMove(move) {
         g_pieceList[(capturedType << 4) | g_pieceIndex[lastPieceSquare]] = lastPieceSquare;
         g_pieceList[(capturedType << 4) | g_pieceCount[capturedType]] = 0;
         g_baseEval += materialTable[captured & 0x7];
-//      g_baseEval += pieceSquareAdj[captured & 0x7][me ? flipTable[epcEnd] : epcEnd];
+        g_baseEval += pieceSquareAdj[captured & 0x7][flipTable(to, otherColor)];
         g_hashKeyLow ^= g_zobristLow[to][capturedType];
         g_hashKeyHigh ^= g_zobristHigh[to][capturedType];
         g_move50 = 0;
@@ -627,14 +950,14 @@ function MakeMove(move) {
     g_hashKeyLow ^= g_zobristBlackLow;
     g_hashKeyHigh ^= g_zobristBlackHigh;
 
-//  g_baseEval -= pieceSquareAdj[piece & 0x7][me == 0 ? flipTable[from] : from];
+    g_baseEval -= pieceSquareAdj[piece & 0x7][flipTable(from, g_toMove)];
 
     // Move our piece in the piece list
     g_pieceIndex[to] = g_pieceIndex[from];
     g_pieceList[((piece & 0xF) << 4) | g_pieceIndex[to]] = to;
 
     g_board[to] = g_board[from];
-//  g_baseEval += pieceSquareAdj[piece & 0x7][me == 0 ? flipTable[to] : to];
+    g_baseEval += pieceSquareAdj[piece & 0x7][flipTable(to, g_toMove)];
     g_board[from] = pieceEmpty;
 
     g_toMove = otherColor;
@@ -671,8 +994,16 @@ function See(move) {
     const us = (fromPiece & colorWhite) ? colorWhite : 0;
     const them = 8 - us;
 
-    // TODO: Pawn attacks
+    // Pawn attacks
     // If any opponent pawns can capture back, this capture is probably not worthwhile (as we must be using knight or above).
+    var p = navigate(to, cn, us);
+    if ((p !== null) && (g_board[p] & 0xF == pieceSoldier | them)) return false;
+    if (flipTable(to, us) >= 45) {
+        p = navigate(to, cw, colorWhite);
+        if ((p !== null) && (g_board[p] & 0xF == pieceSoldier | them)) return false;
+        p = navigate(to, ce, colorWhite);
+        if ((p !== null) && (g_board[p] & 0xF == pieceSoldier | them)) return false;
+    }
 
     var themAttacks = new Array();
 
@@ -680,36 +1011,106 @@ function See(move) {
     // If any opponent knights can capture back, and the deficit we have to make up is greater than the knights value, 
     // it's not worth it.  We can capture on this square again, and the opponent doesn't have to capture back. 
     var captureDeficit = fromValue - toValue;
-    SeeAddKnightAttacks(to, them, themAttacks);
+    var pieceIdx = (them | pieceHorse) << 4;
+    var attackerSq = g_pieceList[pieceIdx++];
+    while (attackerSq != 0) {
+        if (IsSquareAttackableFrom(attackerSq, (start, stop) => {
+            return stop == to;
+        })) {
+            themAttacks.push(attackerSq);
+        }
+        attackerSq = g_pieceList[pieceIdx++];
+    }
     if (themAttacks.length != 0 && captureDeficit > g_seeValues[pieceHorse]) {
         return false;
     }
 
-    // Rook attacks
+    // Slider attacks
     g_board[from] = 0;
-    const pieceType = pieceChariot;
-    if (SeeAddSliderAttacks(to, them, themAttacks, pieceType)) {
-        if (captureDeficit > g_seeValues[pieceType]) {
-            g_board[from] = fromPiece;
-            return false;
+    g_board[from] = 0;
+    for (var pieceType = pieceChariot; pieceType <= pieceCannon; pieceType++) {
+        pieceIdx = (them | pieceType) << 4;
+        attackerSq = g_pieceList[pieceIdx++];
+        var hit = false;
+        while (attackerSq != 0) {
+            if (IsSquareAttackableFrom(attackerSq, (start, stop) => {
+                return stop == to;
+            })) {
+                themAttacks.push(attackerSq);
+                hit = true;
+            }
+            attackerSq = g_pieceList[pieceIdx++];
+        }
+        if (hit) {
+            if (captureDeficit > g_seeValues[pieceType]) {
+                g_board[from] = fromPiece;
+                return false;
+            }
         }
     }
 
-    // TODO: Cannon attacks
+    // Elephant attacks 
+    pieceIdx = (them | pieceElephant) << 4;
+    attackerSq = g_pieceList[pieceIdx++];
+    while (attackerSq != 0) {
+        if (IsSquareAttackableFrom(attackerSq, (start, stop) => {
+            return stop == to;
+        })) {
+            themAttacks.push(attackerSq);
+        }
+        attackerSq = g_pieceList[pieceIdx++];
+    }
 
-    // TODO: Pawn defenses 
+    // Advisor attacks 
+    pieceIdx = (them | pieceAdvisor) << 4;
+    attackerSq = g_pieceList[pieceIdx++];
+    while (attackerSq != 0) {
+        if (IsSquareAttackableFrom(attackerSq, (start, stop) => {
+            return stop == to;
+        })) {
+            themAttacks.push(attackerSq);
+        }
+        attackerSq = g_pieceList[pieceIdx++];
+    }
+
+    // Pawn defenses 
     // At this point, we are sure we are making a "losing" capture.  The opponent can not capture back with a 
     // pawn.  They cannot capture back with a minor/major and stand pat either.  So, if we can capture with 
     // a pawn, it's got to be a winning or equal capture. 
+    var p = navigate(to, cs, us);
+    if ((p !== null) && (g_board[p] & 0xF == pieceSoldier | us)) return true;
+    if (flipTable(to, us) < 45) {
+        p = navigate(to, cw, colorWhite);
+        if ((p !== null) && (g_board[p] & 0xF == pieceSoldier | us)) return true;
+        p = navigate(to, ce, colorWhite);
+        if ((p !== null) && (g_board[p] & 0xF == pieceSoldier | us)) return true;
+    }
 
     // King attacks
-    SeeAddSliderAttacks(to, them, themAttacks, pieceGeneral);
+    pieceIdx = (them | pieceGeneral) << 4;
+    attackerSq = g_pieceList[pieceIdx++];
+    while (attackerSq != 0) {
+        if (IsSquareAttackableFrom(attackerSq, (start, stop) => {
+            return stop == to;
+        })) {
+            themAttacks.push(attackerSq);
+        }
+        attackerSq = g_pieceList[pieceIdx++];
+    }
 
     // Our attacks
     var usAttacks = new Array();
-    SeeAddKnightAttacks(to, us, usAttacks);
-    for (var pieceType = pieceElephant; pieceType <= pieceGeneral; pieceType++) {
-        SeeAddSliderAttacks(to, us, usAttacks, pieceType);
+    for (var pieceType = pieceHorse; pieceType <= pieceGeneral; pieceType++) {
+        pieceIdx = (us | pieceType) << 4;
+        attackerSq = g_pieceList[pieceIdx++];
+        while (attackerSq != 0) {
+            if (IsSquareAttackableFrom(attackerSq, (start, stop) => {
+                return stop == to;
+            })) {
+                usAttacks.push(attackerSq);
+            }
+            attackerSq = g_pieceList[pieceIdx++];
+        }
     }
 
     g_board[from] = fromPiece;
@@ -750,7 +1151,7 @@ function See(move) {
         themAttacks[capturingPieceIndex] = 0;
 
         // Add any x-ray attackers
-        SeeAddXrayAttack(to, capturingPieceSquare, us, usAttacks, themAttacks);
+//      SeeAddXrayAttack(to, capturingPieceSquare, us, usAttacks, themAttacks);
 
         // Our turn to capture
         capturingPieceValue = 1000;
@@ -783,7 +1184,7 @@ function See(move) {
         usAttacks[capturingPieceIndex] = 0;
 
         // Add any x-ray attackers
-        SeeAddXrayAttack(to, capturingPieceSquare, us, usAttacks, themAttacks);
+//      SeeAddXrayAttack(to, capturingPieceSquare, us, usAttacks, themAttacks);
     }
 }    
 
@@ -1501,6 +1902,7 @@ function ResetGame() {
    }
    g_zobristBlackLow = mt.next(32);
    g_zobristBlackHigh = mt.next(32);
+   InitializeEval();
 }
 
 function SetHash() {
@@ -1531,13 +1933,15 @@ function InitializeFromFen(fen) {
     g_hashKeyHigh = hashResult.hashKeyHigh;
 
     g_baseEval = 0;
-    for (var i = 0; i < 256; i++) {
-        if (g_board[i] & colorWhite) {
-//          g_baseEval += pieceSquareAdj[g_board[i] & 0x7][i];
-            g_baseEval += materialTable[g_board[i] & 0x7];
-        } else if (g_board[i] & colorBlack) {
-//          g_baseEval -= pieceSquareAdj[g_board[i] & 0x7][flipTable[i]];
-            g_baseEval -= materialTable[g_board[i] & 0x7];
+    for (var p = 0; p < 90; p++) {
+        if (g_board[p] != pieceEmpty) {
+            if (g_board[p] & colorWhite) {
+                g_baseEval += pieceSquareAdj[g_board[p] & 0x7][p];
+                g_baseEval += materialTable[g_board[p] & 0x7];
+            } else {
+                g_baseEval -= pieceSquareAdj[g_board[p] & 0x7][flipTable(p, 0)];
+                g_baseEval -= materialTable[g_board[p] & 0x7];
+            }
         }
     }
     if (!g_toMove) g_baseEval = -g_baseEval;
