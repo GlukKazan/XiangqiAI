@@ -22,7 +22,7 @@ const USERNAME = 'xiangqiai';
 const PASSWORD = 'xiangqiai';
 
 const MAX_SESSIONS   = 3;
-const MIN_SESSIONS   = 1;
+const MIN_SESSIONS   = 0;
 const MIN_AI_TIMEOUT = 1000;
 const MAX_AI_TIMEOUT = 2000;
 
@@ -64,7 +64,7 @@ var logger = winston.createLogger({
 });
 
 function App() {
-    this.state  = STATE.STRT;
+    this.state  = STATE.INIT;
     this.states = [];
 }
 
@@ -120,7 +120,7 @@ let recovery = function(app) {
         headers: { Authorization: `Bearer ${TOKEN}` }
     })
     .then(function (response) {
-//      console.log(response.data);
+        console.log(response.data);
         uid = response.data.uid;
         timeout = response.data.ai_timeout;
         app.state = STATE.GETM;
@@ -134,13 +134,13 @@ let recovery = function(app) {
 }
 
 let getConfirmed = function(app) {
-//  console.log('GETM');
+    console.log('GETM');
     app.state = STATE.WAIT;
     axios.get(SERVICE + '/api/move/confirmed/' + uid, {
         headers: { Authorization: `Bearer ${TOKEN}` }
     })
     .then(function (response) {
-//      console.log(response.data);
+        console.log(response.data);
         app.state = STATE.MOVE;
     })
     .catch(function (error) {
@@ -159,7 +159,7 @@ let checkTurn = function(app) {
     })
     .then(function (response) {
         if (response.data.length > 0) {
-//          console.log(response.data);
+            console.log(response.data);
             sid = response.data[0].id;
             setup = response.data[0].last_setup;
             app.state = STATE.RECO;
@@ -248,11 +248,6 @@ function FinishTurnCallback(bestMove, fen, value, time, ply) {
         if (result) {
             turn = result[1];
         }
-        const re = /\s(\w)/;
-        const r = move.match(re);
-        if (r) {
-            move = move.replace(re, ((turn == 0) ? ' White ' : ' Black ') + r[1]);
-        }
         console.log('move = ' + move + ', time=' + time + ', value=' + value + ', ply=' + ply);
         logger.info('move = ' + move + ', time=' + time + ', value=' + value + ', ply=' + ply);
         app.state  = STATE.WAIT;
@@ -302,7 +297,7 @@ let getFen = function(fen, move) {
 }
 
 let sendMove = function(app) {
-//  console.log('MOVE');
+    console.log('MOVE');
     app.state  = STATE.WAIT;
     const result = setup.match(/[?&]setup=(.*)/);
     if (result) {
@@ -322,7 +317,7 @@ let sendMove = function(app) {
             console.log('move = ' + move);
             logger.info('move = ' + move);
             const f = getFen(fen, move);
-//          console.log('fen = ' + f);
+            console.log('fen = ' + f);
             if (f === null) {
                 app.state  = STATE.STOP;
             } else {
@@ -331,7 +326,7 @@ let sendMove = function(app) {
                     turn = r[1];
                 }
                 let s = getSetup(f);
-//              console.log('s = ' + s);
+                console.log('s = ' + s);
                 app.state  = STATE.WAIT;
                 axios.post(SERVICE + '/api/move', {
                     uid: uid,
@@ -351,8 +346,6 @@ let sendMove = function(app) {
                 });
             }
         } else {
-            const re = /m/g;
-            fen = fen.replace(re, '1');
             ai.FindMove(fen, _.random(MIN_AI_TIMEOUT + (timeout ? timeout : 0), MAX_AI_TIMEOUT + (timeout ? timeout : 0)), FinishTurnCallback);
         }
     } else {
@@ -393,7 +386,7 @@ let checkSess = function(app) {
 }
 
 let addSess = function(app) {
-//  console.log('SESS');
+    console.log('SESS');
     app.state = STATE.WAIT;
     axios.post(SERVICE + '/api/session', {
         game_id: 23,

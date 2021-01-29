@@ -887,6 +887,7 @@ function UnmakeMove(move) {
     const captured = g_moveUndoStack[g_moveCount].captured;
     const to = (move >> 8) & 0xFF;
     const from = move & 0xFF;
+    var piece = g_board[to];
 
     g_board[from] = g_board[to];
     g_board[to] = captured;
@@ -1971,7 +1972,7 @@ function InitializeFromFen(pieces) {
 
     InitializePieceList();
 
-    g_toMove = chunks[1].charAt(0) == 'w' ? colorWhite : 0;
+    g_toMove = pieces.charAt(0) == 'w' ? colorWhite : 0;
 
     var hashResult = SetHash();
     g_hashKeyLow = hashResult.hashKeyLow;
@@ -1992,7 +1993,7 @@ function InitializeFromFen(pieces) {
     if (!g_toMove) g_baseEval = -g_baseEval;
 
     g_move50 = 0;
-    g_inCheck = IsKingAttackable(g_pieceList[(g_toMove | pieceKing) << 4]);
+    g_inCheck = IsKingAttackable(g_pieceList[(g_toMove | pieceGeneral) << 4]);
 
     return '';
 }
