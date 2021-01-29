@@ -316,7 +316,7 @@ function IsAttackableFromDirection(target, color, dir, sliders, opp) {
     var p = navigate(target, dir, color);
     if (p === null) return false;
     var piece = g_board[p];
-    if ((piece != pieceEmpty) && (piece & 8 != color)) {
+    if ((piece != pieceEmpty) && ((piece & 8) != color)) {
         const pieceType = piece & 7;
         if (_.indexOf(sliders, pieceType) >= 0) return true;
         if ((pieceType == pieceSoldier) && opp) {
@@ -330,12 +330,12 @@ function IsAttackableFromDirection(target, color, dir, sliders, opp) {
         piece = g_board[p];
     }
     const pieceType = piece & 7;
-    if ((_.indexOf(sliders, pieceType) >= 0) && (piece & 8 != color)) return true;
+    if ((_.indexOf(sliders, pieceType) >= 0) && ((piece & 8) != color)) return true;
     p = navigate(p, dir, color);
     while (p !== null) {
         piece = g_board[p];
-        if (piece & 8 == color) return false;
-        if (piece & 7 == pieceCannon) return true;
+        if ((piece & 8) == color) return false;
+        if ((piece & 7) == pieceCannon) return true;
         p = navigate(p, dir, color);
     }
     return false;
@@ -346,8 +346,8 @@ function IsAttackableByElephant(target, color, dir, opp) {
     if (p === null) return false;
     var piece = g_board[p];
     if (piece != pieceEmpty) {
-        if (piece & 8 == color) return false;
-        if (piece & 7 == pieceAdvisor) {
+        if ((piece & 8) == color) return false;
+        if ((piece & 7) == pieceAdvisor) {
             return navigate(p, opp, piece & 8) !== null;
         }
         return false;
@@ -356,8 +356,8 @@ function IsAttackableByElephant(target, color, dir, opp) {
     if (p === null) return false;
     piece = g_board[p];
     if (piece == pieceEmpty) return false;
-    if (piece & 8 == color) return false;
-    if (piece & 7 != pieceElephant) return false;
+    if ((piece & 8) == color) return false;
+    if ((piece & 7) != pieceElephant) return false;
     return navigate(p, opp, piece & 8) !== null;
 }
 
@@ -370,7 +370,7 @@ function IsAttackableByKnight(target, color, d, o) {
     if (p === null) return false;
     piece = g_board[p];
     if (piece == pieceEmpty) return false;
-    if (piece & 8 == color) return false;
+    if ((piece & 8) == color) return false;
     return (piece & 7) == pieceHorse;
 }
 
@@ -496,7 +496,7 @@ function IsSquareAttackableFrom(from, callback) {
 function GenerateAllMoves(moveStack) {
     for (var pos = 0; pos < 90; pos++) {
         var piece = g_board[pos];
-        if ((piece != pieceEmpty) && (piece & 8 == g_toMove)) {
+        if ((piece != pieceEmpty) && ((piece & 8) == g_toMove)) {
             IsSquareAttackableFrom(pos, (from, to, flag) => {
                 moveStack.push(GenerateMove(from, to));
                 return flag;
@@ -508,7 +508,7 @@ function GenerateAllMoves(moveStack) {
 function GenerateCaptureMoves(moveStack) {
     for (var pos = 0; pos < 90; pos++) {
         var piece = g_board[pos];
-        if ((piece != pieceEmpty) && (piece & 8 == g_toMove)) {
+        if ((piece != pieceEmpty) && ((piece & 8) == g_toMove)) {
             IsSquareAttackableFrom(pos, (from, to, flag) => {
                 if (g_board[to] != pieceEmpty) {
                     moveStack.push(GenerateMove(from, to));
@@ -715,7 +715,7 @@ function Mobility(color) {
         p = navigate(from, cn, colorWhite);
         while (p !== null) {
             if (g_board[p] != pieceEmpty) {
-                if (g_board[p] & colorWhite != color) mob++;
+                if ((g_board[p] & colorWhite) != color) mob++;
                 break;
             }
             mob++;
@@ -724,7 +724,7 @@ function Mobility(color) {
         p = navigate(from, cs, colorWhite);
         while (p !== null) {
             if (g_board[p] != pieceEmpty) {
-                if (g_board[p] & colorWhite != color) mob++;
+                if ((g_board[p] & colorWhite) != color) mob++;
                 break;
             }
             mob++;
@@ -733,7 +733,7 @@ function Mobility(color) {
         p = navigate(from, cw, colorWhite);
         while (p !== null) {
             if (g_board[p] != pieceEmpty) {
-                if (g_board[p] & colorWhite != color) mob++;
+                if ((g_board[p] & colorWhite) != color) mob++;
                 break;
             }
             mob++;
@@ -742,7 +742,7 @@ function Mobility(color) {
         p = navigate(from, ce, colorWhite);
         while (p !== null) {
             if (g_board[p] != pieceEmpty) {
-                if (g_board[p] & colorWhite != color) mob++;
+                if ((g_board[p] & colorWhite) != color) mob++;
                 break;
             }
             mob++;
@@ -766,7 +766,7 @@ function Mobility(color) {
         p = navigate(p, cn, colorWhite);
         while (p !== null) {
             if (g_board[p] != pieceEmpty) {
-                if (g_board[p] & colorWhite != color) mob++;
+                if ((g_board[p] & colorWhite) != color) mob++;
                 break;
             }
             p = navigate(p, cn, colorWhite);
@@ -780,7 +780,7 @@ function Mobility(color) {
         p = navigate(p, cs, colorWhite);
         while (p !== null) {
             if (g_board[p] != pieceEmpty) {
-                if (g_board[p] & colorWhite != color) mob++;
+                if ((g_board[p] & colorWhite) != color) mob++;
                 break;
             }
             p = navigate(p, cs, colorWhite);
@@ -794,7 +794,7 @@ function Mobility(color) {
         p = navigate(p, cw, colorWhite);
         while (p !== null) {
             if (g_board[p] != pieceEmpty) {
-                if (g_board[p] & colorWhite != color) mob++;
+                if ((g_board[p] & colorWhite) != color) mob++;
                 break;
             }
             p = navigate(p, cw, colorWhite);
@@ -808,7 +808,7 @@ function Mobility(color) {
         p = navigate(p, ce, colorWhite);
         while (p !== null) {
             if (g_board[p] != pieceEmpty) {
-                if (g_board[p] & colorWhite != color) mob++;
+                if ((g_board[p] & colorWhite) != color) mob++;
                 break;
             }
             p = navigate(p, ce, colorWhite);
@@ -985,12 +985,12 @@ function See(move) {
     // Pawn attacks
     // If any opponent pawns can capture back, this capture is probably not worthwhile (as we must be using knight or above).
     var p = navigate(to, cn, us);
-    if ((p !== null) && (g_board[p] & 0xF == pieceSoldier | them)) return false;
+    if ((p !== null) && ((g_board[p] & 0xF) == (pieceSoldier | them))) return false;
     if (flipTable(to, us) >= 45) {
         p = navigate(to, cw, colorWhite);
-        if ((p !== null) && (g_board[p] & 0xF == pieceSoldier | them)) return false;
+        if ((p !== null) && ((g_board[p] & 0xF) == (pieceSoldier | them))) return false;
         p = navigate(to, ce, colorWhite);
-        if ((p !== null) && (g_board[p] & 0xF == pieceSoldier | them)) return false;
+        if ((p !== null) && ((g_board[p] & 0xF) == (pieceSoldier | them))) return false;
     }
 
     var themAttacks = new Array();
@@ -1065,12 +1065,12 @@ function See(move) {
     // pawn.  They cannot capture back with a minor/major and stand pat either.  So, if we can capture with 
     // a pawn, it's got to be a winning or equal capture. 
     var p = navigate(to, cs, us);
-    if ((p !== null) && (g_board[p] & 0xF == pieceSoldier | us)) return true;
+    if ((p !== null) && ((g_board[p] & 0xF) == (pieceSoldier | us))) return true;
     if (flipTable(to, us) < 45) {
         p = navigate(to, cw, colorWhite);
-        if ((p !== null) && (g_board[p] & 0xF == pieceSoldier | us)) return true;
+        if ((p !== null) && ((g_board[p] & 0xF) == (pieceSoldier | us))) return true;
         p = navigate(to, ce, colorWhite);
-        if ((p !== null) && (g_board[p] & 0xF == pieceSoldier | us)) return true;
+        if ((p !== null) && ((g_board[p] & 0xF) == (pieceSoldier | us))) return true;
     }
 
     // King attacks
@@ -1106,6 +1106,9 @@ function See(move) {
     // can get it back somehow.  We assume the opponent can capture our current piece in this score, which 
     // simplifies the later code considerably. 
     var seeValue = toValue - fromValue;
+
+    // DEBUG:
+    return false;
 
     for (; ; ) {
         var capturingPieceValue = 1000;
@@ -1911,16 +1914,19 @@ function SetHash() {
 }
 
 function MakeSquare(row, col) {
-    return row * HEIGHT + col;
+    return row * WIDTH + col;
 }
 
-function InitializeFromFen(pieces) {
+function InitializeFromFen(fen) {
+    var chunks = fen.split(' ');
+
     var row = 0;
     var col = 0;
 
     for (var i = 0; i < 90; i++) 
         g_board[i] = pieceEmpty;
 
+    var pieces = chunks[0];
     for (var i = 0; i < pieces.length; i++) {
         var c = pieces.charAt(i);
 
@@ -1972,7 +1978,7 @@ function InitializeFromFen(pieces) {
 
     InitializePieceList();
 
-    g_toMove = pieces.charAt(0) == 'w' ? colorWhite : 0;
+    g_toMove = chunks[1].charAt(0) == 'w' ? colorWhite : 0;
 
     var hashResult = SetHash();
     g_hashKeyLow = hashResult.hashKeyLow;
@@ -1996,6 +2002,10 @@ function InitializeFromFen(pieces) {
     g_inCheck = IsKingAttackable(g_pieceList[(g_toMove | pieceGeneral) << 4]);
 
     return '';
+}
+
+function debugPlyCallback(bestMove, value, time, ply) {
+    console.log(FormatMove(bestMove) + ', v = ' + value + ', t = ' + time + ', ply = ' + ply);
 }
 
 function FindMove(fen, timeout, callback) {

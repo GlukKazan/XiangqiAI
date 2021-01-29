@@ -23,17 +23,16 @@ const PASSWORD = 'xiangqiai';
 
 const MAX_SESSIONS   = 3;
 const MIN_SESSIONS   = 0;
-const MIN_AI_TIMEOUT = 1000;
-const MAX_AI_TIMEOUT = 2000;
+const MIN_AI_TIMEOUT = 9000;
+const MAX_AI_TIMEOUT = 10000;
 
-let TOKEN   = null;
-let sid     = null;
-let uid     = null;
-let setup   = null;
-let turn    = null;
-let debuts  = [];
-let mines   = null;
-let timeout = null;
+let TOKEN    = null;
+let sid      = null;
+let uid      = null;
+let setup    = null;
+let turn     = null;
+let openings = [];
+let timeout  = null;
 
 var winston = require('winston');
 require('winston-daily-rotate-file');
@@ -77,7 +76,7 @@ let loadDebuts = function(app) {
     axios.get(SERVICE + '/api/game/openings/7')
     .then(function (response) {
         _.each(response.data, (x) => {
-            debuts.push(x);
+            openings.push(x);
         });
         app.state = STATE.INIT;
       })
@@ -250,7 +249,7 @@ function FinishTurnCallback(bestMove, fen, value, time, ply) {
         }
         console.log('move = ' + move + ', time=' + time + ', value=' + value + ', ply=' + ply);
         logger.info('move = ' + move + ', time=' + time + ', value=' + value + ', ply=' + ply);
-        app.state  = STATE.WAIT;
+/*      app.state  = STATE.WAIT;
         axios.post(SERVICE + '/api/move', {
             uid: uid,
             next_player: (turn == 0) ? 2 : 1,
@@ -267,14 +266,17 @@ function FinishTurnCallback(bestMove, fen, value, time, ply) {
             console.log('MOVE ERROR: ' + error);
             logger.error('MOVE ERROR: ' + error);
             app.state  = STATE.INIT;
-        });
+        });*/
+
+        console.log('fen = ' + fen);
+        app.state = STATE.STOP;
     }
     app.state  = STATE.STOP;
 }
 
 let checkPrefix = function(fen) {
-    for (let i = 0; i < debuts.length; i++) {
-        if (fen.startsWith(debuts[i].setup_prefix)) return debuts[i].move_list;
+    for (let i = 0; i < openings.length; i++) {
+        if (fen.startsWith(openings[i].setup_prefix)) return openings[i].move_list;
     }
     return null;
 }
