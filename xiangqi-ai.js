@@ -425,8 +425,8 @@ function IsRiderAttackedFrom(from, dir, callback) {
 function IsCannonAttackedFrom(from, dir, callback) {
     var p = navigate(from, dir, colorWhite);
     while (p !== null) {
-        if (callback(from, p, false)) return false;
         if (g_board[p] != pieceEmpty) break;
+        if (callback(from, p, false)) return false;
         p = navigate(p, dir, colorWhite);
     }
     p = navigate(p, dir, colorWhite);
@@ -605,7 +605,7 @@ var pieceSquareAdj = [
         0,   0,   0,   0,   0,   0,   0,   0,   0,
         0,   0,   0,   0,   0,   0,   0,   0,   0,
         0,   0,   0,  10,  10,  10,   0,   0,   0,
-        0,   0,   0,  20,  30,  20,   0,   0,   0,
+        0,   0,   0,   5, -10,   5,   0,   0,   0,
         0,   0,   0,  10,  20,  10,   0,   0,   0 ]
 ];
 
@@ -2012,7 +2012,7 @@ function FindMove(fen, timeout, callback) {
     ResetGame();
     InitializeFromFen(fen);
     g_timeout = timeout;
-    Search(callback, 99, null);
+    Search(callback, 99, debugPlyCallback);
 }
 
 module.exports.FindMove = FindMove;

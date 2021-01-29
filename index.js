@@ -249,7 +249,7 @@ function FinishTurnCallback(bestMove, fen, value, time, ply) {
         }
         console.log('move = ' + move + ', time=' + time + ', value=' + value + ', ply=' + ply);
         logger.info('move = ' + move + ', time=' + time + ', value=' + value + ', ply=' + ply);
-/*      app.state  = STATE.WAIT;
+        app.state  = STATE.WAIT;
         axios.post(SERVICE + '/api/move', {
             uid: uid,
             next_player: (turn == 0) ? 2 : 1,
@@ -266,10 +266,9 @@ function FinishTurnCallback(bestMove, fen, value, time, ply) {
             console.log('MOVE ERROR: ' + error);
             logger.error('MOVE ERROR: ' + error);
             app.state  = STATE.INIT;
-        });*/
-
-        console.log('fen = ' + fen);
-        app.state = STATE.STOP;
+        });
+//      console.log('fen = ' + fen);
+//      app.state = STATE.STOP;
     }
     app.state  = STATE.STOP;
 }
