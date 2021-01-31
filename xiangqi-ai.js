@@ -400,6 +400,10 @@ function IsKingAttackable(target) {
 function IsSoldierAttackedFrom(from, color, dir, callback) {
     var p = navigate(from, dir, color);
     if (p === null) return false;
+    var x = g_board[p];
+    if (x != pieceEmpty) {
+        if ((x & 8) == color) return false;
+    }
     return callback(from, p, true);
 }
 
@@ -409,20 +413,28 @@ function IsLeaperAttackedFrom(from, color, o, d, callback) {
     if (g_board[p] != pieceEmpty) return false;
     p = navigate(p, d, color);
     if (p === null) return false;
+    var x = g_board[p];
+    if (x != pieceEmpty) {
+        if ((x & 8) == color) return false;
+    }
     return callback(from, p, true);
 }
 
-function IsRiderAttackedFrom(from, dir, callback) {
+function IsRiderAttackedFrom(from, color, dir, callback) {
     var p = navigate(from, dir, colorWhite);
     while (p !== null) {
+        var x = g_board[p];
+        if (x != pieceEmpty) {
+            if ((x & 8) == color) return false;
+        }
         if (callback(from, p, false)) return true;
-        if (g_board[p] != pieceEmpty) return false;
+        if (x != pieceEmpty) return false;
         p = navigate(p, dir, colorWhite);
     }
     return false;
 }
 
-function IsCannonAttackedFrom(from, dir, callback) {
+function IsCannonAttackedFrom(from, color, dir, callback) {
     var p = navigate(from, dir, colorWhite);
     while (p !== null) {
         if (g_board[p] != pieceEmpty) break;
@@ -431,7 +443,9 @@ function IsCannonAttackedFrom(from, dir, callback) {
     }
     p = navigate(p, dir, colorWhite);
     while (p !== null) {
-        if (g_board[p] != pieceEmpty) {
+        var x = g_board[p];
+        if (x != pieceEmpty) {
+            if ((x & 8) == color) return false;
             if (callback(from, p, true)) return true;
             return false;
         }
@@ -473,16 +487,16 @@ function IsSquareAttackableFrom(from, callback) {
         if (IsLeaperAttackedFrom(from, color, g_darkOption ? cse : rse, g_darkOption ? cse : rse, callback)) return true;
     }
     if (pieceType == pieceChariot) {
-        if (IsRiderAttackedFrom(from, cn, callback)) return true;
-        if (IsRiderAttackedFrom(from, cs, callback)) return true;
-        if (IsRiderAttackedFrom(from, ce, callback)) return true;
-        if (IsRiderAttackedFrom(from, cw, callback)) return true;
+        if (IsRiderAttackedFrom(from, color, cn, callback)) return true;
+        if (IsRiderAttackedFrom(from, color, cs, callback)) return true;
+        if (IsRiderAttackedFrom(from, color, ce, callback)) return true;
+        if (IsRiderAttackedFrom(from, color, cw, callback)) return true;
     }
     if (pieceType == pieceCannon) {
-        if (IsCannonAttackedFrom(from, cn, callback)) return true;
-        if (IsCannonAttackedFrom(from, cs, callback)) return true;
-        if (IsCannonAttackedFrom(from, ce, callback)) return true;
-        if (IsCannonAttackedFrom(from, cw, callback)) return true;
+        if (IsCannonAttackedFrom(from, color, cn, callback)) return true;
+        if (IsCannonAttackedFrom(from, color, cs, callback)) return true;
+        if (IsCannonAttackedFrom(from, color, ce, callback)) return true;
+        if (IsCannonAttackedFrom(from, color, cw, callback)) return true;
     }
     if (pieceType == pieceGeneral) {
         if (IsSoldierAttackedFrom(from, color, rn, callback)) return true;
